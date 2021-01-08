@@ -36,7 +36,7 @@ object CirceValidation {
     def validate(car: Car): ValidatedNel[String, Car] = (
       if (Option(car.brand).exists(_.nonEmpty)) car.brand.validNel
       else "Brand must be provided".invalidNel,
-      if (car.wheelCount < 2 || car.wheelCount > 6) "A car must have been 2 and 6 wheels".invalidNel
+      if (car.wheelCount < 2 || car.wheelCount > 6) "A car must have between 2 and 6 wheels".invalidNel
       else car.wheelCount.validNel,
       BodyValidator.validate(car.body),
       ).mapN[Car](Car.apply _)
@@ -62,8 +62,11 @@ object CirceValidation {
       if (doorHandle.numberOfParts > 0) doorHandle.numberOfParts.validNel
       else "The number of door handle parts must be greater than 0".invalidNel
       ).map[DoorHandle](DoorHandle.apply _)
-
   }
 
+  implicit val DoorHandleDecoder = ValidatingDecoder[DoorHandle](DoorHandleValidator.validate)
+  implicit val DoorDecoder = ValidatingDecoder[Door](DoorValidator.validate)
+  implicit val BodyDecoder = ValidatingDecoder[Body](BodyValidator.validate)
+  implicit val CarDecoder = ValidatingDecoder[Car](CarValidator.validate)
 
 }

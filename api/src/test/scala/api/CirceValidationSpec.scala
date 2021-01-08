@@ -51,7 +51,7 @@ class CirceValidationSpec extends BaseSpec {
            |  }
            |}""".stripMargin
 
-      implicit val carDecoder = deriveDecoder[Car]
+      import CirceValidation._ // This call imports each individual decoder
 
       val decoded: ValidatedNel[circe.Error, Car] = jawn.decodeAccumulating[Car](jsonText)
       val converted: Validated[NonEmptyList[String], Car] = decoded.leftMap { e =>
@@ -64,7 +64,7 @@ class CirceValidationSpec extends BaseSpec {
       }
       println(converted)
       // prints:
-      // Valid(Car(Audi,8,Body(,List(Door(true,DoorHandle(2)), Door(true,DoorHandle(-1))))))
+      // Invalid(NonEmptyList(: A car must have been 2 and 6 wheels, : Body paint color must be provided, : The number of door handle parts must be greater than 0))
     }
 
   }
