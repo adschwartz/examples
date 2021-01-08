@@ -1,0 +1,101 @@
+plugins {
+    id 'scala'
+    id "com.github.johnrengelman.shadow" version "6.1.0"
+}
+
+repositories {
+    jcenter()
+}
+
+ext {
+    tapirVersion = "0.17.0"
+}
+
+configurations {
+    scalaCompilerPlugin
+}
+
+dependencies {
+    scalaCompilerPlugin 'org.scalamacros:paradise_2.12.10:2.1.1'
+    compile group: 'org.scala-lang', name: 'scala-library', version: '2.12.10'
+
+    // http server:
+    compile group: 'io.circe', name: 'circe-core_2.12', version: '0.14.0-M1'
+    compile group: 'io.circe', name: 'circe-generic_2.12', version: '0.14.0-M1'
+    compile group: 'io.circe', name: 'circe-generic-extras_2.12', version: '0.13.0'
+    compile group: 'io.circe', name: 'circe-literal_2.12', version: '0.14.0-M2'
+    compile group: 'io.circe', name: 'circe-optics_2.12', version: '0.13.0'
+
+    compile group: 'com.softwaremill.sttp.tapir', name: 'tapir-core_2.12', version: tapirVersion
+    compile group: 'com.softwaremill.sttp.tapir', name: 'tapir-json-circe_2.12', version: tapirVersion
+    compile group: 'com.softwaremill.sttp.tapir', name: 'tapir-openapi-docs_2.12', version: tapirVersion
+    compile group: 'com.softwaremill.sttp.tapir', name: 'tapir-openapi-circe-yaml_2.12', version: tapirVersion
+    compile group: 'com.softwaremill.sttp.tapir', name: 'tapir-akka-http-server_2.12', version: tapirVersion
+    compile group: 'com.softwaremill.sttp.tapir', name: 'tapir-http4s-server_2.12', version: tapirVersion
+    compile group: 'com.softwaremill.sttp.tapir', name: 'tapir-swagger-ui-http4s_2.12', version: tapirVersion
+    compile group: 'com.softwaremill.sttp.tapir', name: 'tapir-sttp-client_2.12', version: tapirVersion
+    compile group: 'com.softwaremill.sttp', name: 'akka-http-backend_2.12', version: '1.7.2'
+    compile group: 'com.softwaremill.sttp', name: 'http4s-backend_2.12', version: '1.7.2'
+    compile group: 'com.softwaremill.sttp.client', name: 'core_2.12', version: '2.2.9'
+    compile group: 'com.softwaremill.sttp.client3', name: 'core_2.12', version: '3.0.0-RC11'
+    compile group: 'org.http4s', name: 'http4s-blaze-server_2.12', version: '0.21.14'
+    compile group: 'org.http4s', name: 'http4s-circe_2.12', version: '0.21.14'
+
+    compile group: 'org.typelevel', name: 'cats-core_2.12', version: '2.3.0'
+
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.12.0'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.0'
+    compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-scala_2.12', version: '2.12.0'
+
+    // Database
+    compile group: 'org.tpolecat', name: 'doobie-core_2.12', version: '0.9.4'
+    compile group: 'org.tpolecat', name: 'doobie-hikari_2.12', version: '0.9.4'
+    runtime group: 'mysql', name: 'mysql-connector-java', version: '8.0.20'
+
+    // Configuration
+    compile group: 'com.typesafe', name: 'config', version: '1.4.1'
+    compile group: 'com.github.pureconfig', name: 'pureconfig_2.12', version: '0.14.0'
+    compile group: 'com.github.pureconfig', name: 'pureconfig-cats-effect_2.12', version: '0.14.0'
+
+    // Use Scalatest for testing our library
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile group: 'org.scalatest', name: 'scalatest_2.12', version: '3.2.0'
+    testCompile group: 'org.scalatestplus', name: 'junit-4-12_2.12', version: '3.2.0.0'
+    testCompile group: 'org.tpolecat', name: 'doobie-scalatest_2.12', version: '0.9.4'
+
+}
+
+tasks.withType(ScalaCompile) {
+    // This is needed by cats <+>
+    scalaCompileOptions.additionalParameters = ["-Ypartial-unification"]
+}.withType(ScalaCompile){
+    // Map plugin jars to -Xplugin parameter
+    List<String> parameters =
+            configurations.scalaCompilerPlugin.files.collect {
+                '-Xplugin:'+ it.absolutePath
+            }
+
+    // Add existing parameters
+    List<String> existingParameters = scalaCompileOptions.additionalParameters
+    if (existingParameters) {
+        parameters.addAll(existingParameters)
+    }
+
+    // Add whatever flags you typically add
+    parameters += [
+            '-language:implicitConversions',
+            '-language:higherKinds'
+    ]
+
+    // Finally set the additionalParameters
+    scalaCompileOptions.additionalParameters = parameters
+}
+
+shadowJar {
+    transform(com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer) {
+        resource = 'reference.conf'
+    }
+//    relocate 'com.myCompany.project.event', 'com.myCompany.relocated.project.event'
+}

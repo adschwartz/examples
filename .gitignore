@@ -1,0 +1,21 @@
+
+# intellij
+.idea
+idea
+*.log
+*.iml
+*.ipr
+*.iws
+
+# mac
+.DS_Store
+
+# general
+*.class
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+
+.secrets
